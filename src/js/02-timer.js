@@ -2,14 +2,15 @@ import flatpickr from "flatpickr";
 import "flatpickr/dist/themes/dark.css";
 import { Notify } from "notiflix";
 
-const refs = {
-  myInput: document.querySelector("#datetime-picker"),
+const refs = { 
+  input: document.querySelector('#datetime-picker'), 
   startBtn: document.querySelector('[data-start]'),
   days: document.querySelector('[data-days]'),
   hours: document.querySelector('[data-hours]'),
   min: document.querySelector('[data-minutes]'),
   sec: document.querySelector('[data-seconds]'),
 };
+
 
 let intervalId = null;
 refs.startBtn.setAttribute('disabled', true)  
@@ -22,31 +23,46 @@ const options = {
     minuteIncrement: 1,
     onClose(selectedDates) {
       console.log(selectedDates[0]);  
-      const selectUserDate =  Date.parse(selectedDates[0]);      
 
-      if (selectUserDate <= Date.now()) {
-        Notify.failure('Please choose a date in the future');
-        refs.startBtn.setAttribute('disabled', true)  
-      } else {
-        refs.startBtn.removeAttribute('disabled')       
-      }
-
-      refs.startBtn.addEventListener("click", () => {
-        intervalId = setInterval(() => {
-          refs.startBtn.setAttribute('disabled', true)
-          const deltaTime = selectUserDate - Date.now();         
-
-      if (deltaTime < 1000) {
-        clearInterval(intervalId);
-      }
-      const result = convertMs(deltaTime);
-      displayTimer(result);
-    }, 1000);    
-  });
-},
+      if (selectedDates[0] < options.defaultDate) {
+        Notify.failure('Please choose a date in the future');        
+        return false;
+      } 
+        refs.startBtn.removeAttribute('disabled');                             
+    },
 };
 
-  const fp = flatpickr(refs.myInput, options);  
+
+
+const fp = flatpickr("#datetime-picker", options); 
+   
+
+refs.startBtn.addEventListener("click", () => {
+
+  intervalId = setInterval(() => {
+    updateTime()
+  }, 1000)
+  refs.input.disabled = true;
+  refs.startBtn.disabled = true;
+  }
+); 
+
+  
+function updateTime() {
+      const currentDate = new Date();
+      const selectedUserDate = new Date(refs.input.value);
+    
+      let deltaTime = selectedUserDate - currentDate;
+    
+      if (deltaTime < 0) {
+        refs.input.disabled = false;
+        refs.startBtn.disabled = false;
+        return;
+      } else {
+        const { days, hours, minutes, seconds } = convertMs(deltaTime)
+        displayTimer({ days, hours, minutes, seconds });
+      }  
+};
 
   
 
@@ -69,9 +85,9 @@ const options = {
     return { days, hours, minutes, seconds };
   }
 
-  // console.log(convertMs(2000)); // {days: 0, hours: 0, minutes: 0, seconds: 2}
-  // console.log(convertMs(140000)); // {days: 0, hours: 0, minutes: 2, seconds: 20}
-  // console.log(convertMs(24140000)); // {days: 0, hours: 6 minutes: 42, seconds: 20}
+//   // console.log(convertMs(2000)); // {days: 0, hours: 0, minutes: 0, seconds: 2}
+//   // console.log(convertMs(140000)); // {days: 0, hours: 0, minutes: 2, seconds: 20}
+//   // console.log(convertMs(24140000)); // {days: 0, hours: 6 minutes: 42, seconds: 20}
 
 
   function displayTimer({ days, hours, minutes, seconds }) {
@@ -83,5 +99,4 @@ const options = {
 
   function addLeadingZero(value) {
     return String(value).padStart(2, '0');
-
   }
